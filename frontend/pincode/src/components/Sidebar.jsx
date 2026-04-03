@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
 import "../styles/Sidebar.css";
 
-function Sidebar({ viewMode, setViewMode }) {
+function Sidebar({ viewMode, onNavigate }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-content">
@@ -9,15 +8,23 @@ function Sidebar({ viewMode, setViewMode }) {
         <nav className="sidebar-nav">
           <button
             className={`sidebar-item ${viewMode === "search" ? "active" : ""}`}
-            onClick={() => setViewMode("search")}
+            onClick={() => onNavigate("search")}
           >
             <span className="sidebar-icon">🔍</span>
             <span className="sidebar-label">Search Pincode</span>
           </button>
 
           <button
+            className={`sidebar-item ${viewMode === "map" ? "active" : ""}`}
+            onClick={() => onNavigate("map")}
+          >
+            <span className="sidebar-icon">MAP</span>
+            <span className="sidebar-label">Interactive Map</span>
+          </button>
+
+          <button
             className={`sidebar-item ${viewMode === "state" ? "active" : ""}`}
-            onClick={() => setViewMode("state")}
+            onClick={() => onNavigate("state")}
           >
             <span className="sidebar-icon">📍</span>
             <span className="sidebar-label">Browse State</span>
@@ -25,7 +32,7 @@ function Sidebar({ viewMode, setViewMode }) {
 
           <button
             className={`sidebar-item ${viewMode === "district" ? "active" : ""}`}
-            onClick={() => setViewMode("district")}
+            onClick={() => onNavigate("district")}
           >
             <span className="sidebar-icon">🏘️</span>
             <span className="sidebar-label">Browse District</span>

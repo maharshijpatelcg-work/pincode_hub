@@ -13,9 +13,21 @@ app.use(cors({
 app.use(express.json());
 
 const STATE_FIELDS = ["state", "stateName", "stateName                                       "];
+const DISTRICT_FIELDS = ["districtName", "district", "city"];
+const CITY_FIELDS = ["city", "officeName", "taluk", "districtName"];
+const OFFICE_FIELDS = ["officeName", "office", "city", "districtName"];
+const PINCODE_FIELDS = ["pincode"];
 
 const buildFieldFallback = (fields) =>
     fields.reduceRight((fallback, field) => ({ $ifNull: [`$${field}`, fallback] }), "");
+
+const buildTrimmedFieldExpression = (fields) => ({
+    $trim: {
+        input: {
+            $toString: buildFieldFallback(fields)
+        }
+    }
+});
 
 const buildNormalizedStateExpression = () => ({
     $toUpper: {
@@ -89,6 +101,159 @@ app.get("/states", async (req, res) => {
         ]);
 
         res.json(states.map(({ _id }) => _id));
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+// ================= API 2B =================
+// Interactive map state details with pagination
+app.get("/map/states/:state", async (req, res) => {
+    try {
+        const normalizedState = String(req.params.state || "").trim().toUpperCase();
+        const parsedPage = Number.parseInt(req.query.page, 10);
+        const parsedLimit = Number.parseInt(req.query.limit, 10);
+        const page = Number.isNaN(parsedPage) ? 1 : Math.max(parsedPage, 1);
+        const limit = Number.isNaN(parsedLimit) ? 12 : Math.min(Math.max(parsedLimit, 1), 24);
+        const skip = (page - 1) * limit;
+
+        const [mapData] = await Pincode.aggregate([
+            {
+                $addFields: {
+                    normalizedState: buildNormalizedStateExpression(),
+                    stateDisplay: buildTrimmedFieldExpression(STATE_FIELDS),
+                    districtDisplay: buildTrimmedFieldExpression(DISTRICT_FIELDS),
+                    cityDisplay: buildTrimmedFieldExpression(CITY_FIELDS),
+                    officeDisplay: buildTrimmedFieldExpression(OFFICE_FIELDS),
+                    pincodeDisplay: buildTrimmedFieldExpression(PINCODE_FIELDS)
+                }
+            },
+            {
+                $match: {
+                    normalizedState
+                }
+            },
+            {
+                $facet: {
+                    summary: [
+                        {
+                            $group: {
+                                _id: "$normalizedState",
+                                totalRecords: { $sum: 1 },
+                                districts: { $addToSet: "$districtDisplay" },
+                                cities: { $addToSet: "$cityDisplay" }
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                totalRecords: 1,
+                                totalDistricts: {
+                                    $size: {
+                                        $filter: {
+                                            input: "$districts",
+                                            as: "district",
+                                            cond: { $ne: ["$$district", ""] }
+                                        }
+                                    }
+                                },
+                                totalCities: {
+                                    $size: {
+                                        $filter: {
+                                            input: "$cities",
+                                            as: "city",
+                                            cond: { $ne: ["$$city", ""] }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    records: [
+                        {
+                            $sort: {
+                                districtDisplay: 1,
+                                cityDisplay: 1,
+                                pincodeDisplay: 1
+                            }
+                        },
+                        {
+                            $skip: skip
+                        },
+                        {
+                            $limit: limit
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                pincode: "$pincodeDisplay",
+                                stateName: {
+                                    $cond: [
+                                        { $ne: ["$stateDisplay", ""] },
+                                        "$stateDisplay",
+                                        normalizedState
+                                    ]
+                                },
+                                districtName: {
+                                    $cond: [
+                                        { $ne: ["$districtDisplay", ""] },
+                                        "$districtDisplay",
+                                        "N/A"
+                                    ]
+                                },
+                                cityName: {
+                                    $cond: [
+                                        { $ne: ["$cityDisplay", ""] },
+                                        "$cityDisplay",
+                                        {
+                                            $cond: [
+                                                { $ne: ["$officeDisplay", ""] },
+                                                "$officeDisplay",
+                                                "N/A"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                officeName: {
+                                    $cond: [
+                                        { $ne: ["$officeDisplay", ""] },
+                                        "$officeDisplay",
+                                        "N/A"
+                                    ]
+                                },
+                                officeType: 1,
+                                deliveryStatus: 1,
+                                regionName: 1,
+                                divisionName: 1,
+                                circleName: 1,
+                                taluk: 1
+                            }
+                        }
+                    ]
+                }
+            }
+        ]);
+
+        const summary = mapData?.summary?.[0] || {
+            totalRecords: 0,
+            totalDistricts: 0,
+            totalCities: 0
+        };
+        const totalPages = summary.totalRecords > 0 ? Math.ceil(summary.totalRecords / limit) : 0;
+
+        res.json({
+            state: normalizedState,
+            records: mapData?.records || [],
+            summary,
+            pagination: {
+                page,
+                limit,
+                totalPages,
+                hasPreviousPage: page > 1,
+                hasNextPage: page < totalPages
+            }
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
