@@ -10,7 +10,7 @@ function Sidebar({ viewMode, onNavigate }) {
             className={`sidebar-item ${viewMode === "search" ? "active" : ""}`}
             onClick={() => onNavigate("search")}
           >
-            <span className="sidebar-icon">🔍</span>
+            <span className="sidebar-icon">&#x1F50D;</span>
             <span className="sidebar-label">Search Pincode</span>
           </button>
 
@@ -18,7 +18,7 @@ function Sidebar({ viewMode, onNavigate }) {
             className={`sidebar-item ${viewMode === "map" ? "active" : ""}`}
             onClick={() => onNavigate("map")}
           >
-            <span className="sidebar-icon">MAP</span>
+            <span className="sidebar-icon">&#x1F5FA;</span>
             <span className="sidebar-label">Interactive Map</span>
           </button>
 
@@ -26,7 +26,7 @@ function Sidebar({ viewMode, onNavigate }) {
             className={`sidebar-item ${viewMode === "state" ? "active" : ""}`}
             onClick={() => onNavigate("state")}
           >
-            <span className="sidebar-icon">📍</span>
+            <span className="sidebar-icon">&#x1F4CD;</span>
             <span className="sidebar-label">Browse State</span>
           </button>
 
@@ -34,7 +34,7 @@ function Sidebar({ viewMode, onNavigate }) {
             className={`sidebar-item ${viewMode === "district" ? "active" : ""}`}
             onClick={() => onNavigate("district")}
           >
-            <span className="sidebar-icon">🏘️</span>
+            <span className="sidebar-icon">&#x1F3D8;</span>
             <span className="sidebar-label">Browse District</span>
           </button>
         </nav>

@@ -14,7 +14,7 @@ function Navbar({ onNavigate }) {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <span className="navbar-logo">🚀</span>
+          <span className="navbar-logo">??</span>
           <a
             href="#"
             className="navbar-title"
@@ -49,7 +49,7 @@ function Navbar({ onNavigate }) {
               className="navbar-link"
               onClick={(event) => handleNavigate(event, "map")}
             >
-              Explore Map
+              Interactive Map
             </a>
           </li>
           <li className="navbar-item">
@@ -70,15 +70,8 @@ function Navbar({ onNavigate }) {
               Browse District
             </a>
           </li>
-          <li className="navbar-item">
-            <a href="#about" className="navbar-link navbar-link-primary">
-              About
-            </a>
-          </li>
         </ul>
       </div>
-
-      <div className="navbar-underline"></div>
     </nav>
   );
 }
