@@ -39,6 +39,11 @@ function App() {
 
   const API = "http://localhost:5000";
 
+  async function fetchAllStates() {
+    const res = await axios.get(`${API}/states`);
+    return res.data || [];
+  }
+
   useEffect(() => {
     const syncViewModeWithHash = () => {
       setViewMode(getViewModeFromHash());
@@ -116,11 +121,6 @@ function App() {
     }
 
     setLoading(false);
-  };
-
-  const fetchAllStates = async () => {
-    const res = await axios.get(`${API}/states`);
-    return res.data || [];
   };
 
   const getStates = async () => {
@@ -320,9 +320,9 @@ function App() {
               <div>
                 <h2>Interactive India Map</h2>
                 <p className="map-section-copy">
-                  Click any colored state on the India map to load the state
-                  name, district, city, and pincode details in a safe,
-                  paginated view.
+                  Click anywhere inside a state region on the India map to load
+                  MongoDB-backed state, district, city, office, and pincode
+                  details in a safe, paginated view.
                 </p>
               </div>
               <button onClick={refreshMapStates} className="btn btn-map">
@@ -375,6 +375,63 @@ function App() {
                     </div>
                   </div>
                 </div>
+
+                {mapStateDetails.featuredRecord && (
+                  <div className="map-featured-card">
+                    <div className="map-featured-header">
+                      <div>
+                        <span className="map-featured-kicker">
+                          Selected Region Snapshot
+                        </span>
+                        <h4>MongoDB detail for the clicked map region</h4>
+                      </div>
+                      <span className="map-featured-pincode">
+                        {mapStateDetails.featuredRecord.pincode || "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="map-featured-grid">
+                      <div className="map-featured-item">
+                        <span className="map-featured-label">State</span>
+                        <strong>
+                          {mapStateDetails.featuredRecord.stateName ||
+                            mapStateDetails.state}
+                        </strong>
+                      </div>
+                      <div className="map-featured-item">
+                        <span className="map-featured-label">District</span>
+                        <strong>
+                          {mapStateDetails.featuredRecord.districtName || "N/A"}
+                        </strong>
+                      </div>
+                      <div className="map-featured-item">
+                        <span className="map-featured-label">City</span>
+                        <strong>
+                          {mapStateDetails.featuredRecord.cityName || "N/A"}
+                        </strong>
+                      </div>
+                      <div className="map-featured-item">
+                        <span className="map-featured-label">Office</span>
+                        <strong>
+                          {mapStateDetails.featuredRecord.officeName || "N/A"}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {mapStateDetails.districtPreview?.length > 0 && (
+                      <div className="map-district-preview">
+                        {mapStateDetails.districtPreview.map((district) => (
+                          <span
+                            key={district}
+                            className="map-district-preview-chip"
+                          >
+                            {district}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {mapStateDetails.records?.length > 0 ? (
                   <div className="cards-grid">
